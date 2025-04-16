@@ -77,7 +77,7 @@ sqlx = { version = "0.8.5", default-features = false, features = ["runtime-tokio
 lopdf = "0.36.0"
 # docx-rs = "0.4.17"
 # lancedb = "0.13.0"
-libsqlite3-sys = { version = "0.30", features = ["bundled"] }
+libsqlite3-sys = { version = "0.32", features = ["bundled"] }
 validator = "0.20"
 zip = "2.6.1"
 quick-xml = "0.37.4"
