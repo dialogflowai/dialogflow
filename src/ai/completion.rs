@@ -100,7 +100,7 @@ pub(crate) async fn completion(
             }
         }
     } else {
-        Err(Error::ErrorWithMessage(format!(
+        Err(Error::WithMessage(format!(
             "Can NOT retrieve settings from robot_id: {robot_id}"
         )))
     }
@@ -225,7 +225,7 @@ async fn huggingface(
             Some(0.5),
             &mut result_sender,
         ),
-        LoadedHuggingFaceModel::Bert(_m) => Err(Error::ErrorWithMessage(format!(
+        LoadedHuggingFaceModel::Bert(_m) => Err(Error::WithMessage(format!(
             "Unsuported model type {:?}.",
             &info.model_type
         ))),

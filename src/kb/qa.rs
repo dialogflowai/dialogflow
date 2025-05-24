@@ -27,7 +27,7 @@ pub(crate) async fn init_datasource() -> Result<()> {
     let pool = crate::db::init_sqlite_datasource(p.as_path()).await?;
     DATA_SOURCE
         .set(pool)
-        .map_err(|_| Error::ErrorWithMessage(String::from("Datasource has been set.")))
+        .map_err(|_| Error::WithMessage(String::from("Datasource has been set.")))
 }
 
 pub async fn shutdown_db() {
@@ -142,7 +142,7 @@ async fn save_inner(
         if vectors.0.is_empty() {
             let err = format!("{} embedding data is empty", &q.question);
             log::warn!("{}", &err);
-            return Err(Error::ErrorWithMessage(err));
+            return Err(Error::WithMessage(err));
         }
 
         log::info!("vectors.0.len() = {}", vectors.0.len());
@@ -257,7 +257,7 @@ pub(crate) async fn retrieve_answer(
     if vectors.0.is_empty() {
         let err = format!("{} embedding data is empty", question);
         log::warn!("{}", &err);
-        return Err(Error::ErrorWithMessage(err));
+        return Err(Error::WithMessage(err));
     }
 
     let sql = format!(

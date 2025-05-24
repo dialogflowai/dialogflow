@@ -39,19 +39,15 @@ async fn upload_doc_inner(robot_id: &str, mut multipart: Multipart) -> Result<St
     loop {
         let field = multipart.next_field().await?;
         if field.is_none() {
-            return Err(Error::ErrorWithMessage(String::from("File not found.")));
+            return Err(Error::WithMessage(String::from("File not found.")));
         }
         let field = field.unwrap();
         let Some(file_name) = field.file_name() else {
-            return Err(Error::ErrorWithMessage(String::from(
-                "File name is missing.",
-            )));
+            return Err(Error::WithMessage(String::from("File name is missing.")));
         };
         let file_name = file_name.to_string();
         let Some(content_type) = field.content_type() else {
-            return Err(Error::ErrorWithMessage(String::from(
-                "Content type is missing.",
-            )));
+            return Err(Error::WithMessage(String::from("Content type is missing.")));
         };
         let content_type = content_type.to_string();
         let data = field.bytes().await?;
@@ -65,7 +61,7 @@ async fn upload_doc_inner(robot_id: &str, mut multipart: Multipart) -> Result<St
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document" => {
                 doc::parse_docx(data.to_vec())?
             }
-            _ => return Err(Error::ErrorWithMessage(String::from("Unsupported format"))),
+            _ => return Err(Error::WithMessage(String::from("Unsupported format"))),
         };
         log::info!("Extract text: {text}");
         super::doc::save(robot_id, &file_name, data.len(), &text).await?;
@@ -99,7 +95,7 @@ pub(crate) async fn qa_dryrun(Query(q): Query<HashMap<String, String>>) -> impl 
     let r = q.get("robotId");
     let t = q.get("text");
     if r.is_none() || t.is_none() {
-        let res = Err(Error::ErrorWithMessage(String::from(
+        let res = Err(Error::WithMessage(String::from(
             "robotId or text was missing.",
         )));
         return to_res(res);

@@ -117,7 +117,7 @@ impl HuggingFaceModelInfo {
             HuggingFaceModelType::Bert => {
                 let m = String::from("Bert model doesn't support prompt.");
                 log::warn!("{}", &m);
-                Err(Error::ErrorWithMessage(m))
+                Err(Error::WithMessage(m))
             }
             HuggingFaceModelType::Llama => {
                 let mut p = String::with_capacity(s.len());
@@ -482,7 +482,7 @@ fn download_status<'l>() -> Result<std::sync::MutexGuard<'l, DownloadStatus>> {
                 pe.into_inner()
             }
             std::sync::TryLockError::WouldBlock => {
-                return Err(Error::ErrorWithMessage(String::from(
+                return Err(Error::WithMessage(String::from(
                     "Model files are downloading.",
                 )));
             }
@@ -517,7 +517,7 @@ pub(crate) async fn download_hf_models(
     {
         let mut status = download_status()?;
         if status.downloading {
-            return Err(Error::ErrorWithMessage(String::from(
+            return Err(Error::WithMessage(String::from(
                 "Model files are downloading.",
             )));
         }
@@ -557,7 +557,7 @@ pub(crate) async fn download_hf_models(
         .collect::<Vec<_>>();
     let mut r: Result<_> = Ok(());
     if !info.model_index_file.is_empty() {
-        let model_index_file = construct_model_file_path(&info.mirror, info.model_index_file);
+        let model_index_file = construct_model_file_path(info.mirror, info.model_index_file);
         let path = std::path::Path::new(&model_index_file);
         if !path.exists() {
             r = download_hf_file(&client, info, &root_path, info.model_index_file).await;
@@ -681,14 +681,11 @@ pub(crate) fn check_model_files(info: &HuggingFaceModelInfo) -> Result<()> {
     for f in files.iter() {
         let p = Path::new(f);
         if !p.exists() {
-            return Err(Error::ErrorWithMessage(format!(
-                "Path {:?} is not exist.",
-                p
-            )));
+            return Err(Error::WithMessage(format!("Path {:?} is not exist.", p)));
         }
         let ext = p.extension();
         if ext.is_none() {
-            return Err(Error::ErrorWithMessage(format!(
+            return Err(Error::WithMessage(format!(
                 "{:?} doesn't have extension.",
                 p
             )));
@@ -710,7 +707,7 @@ pub(crate) fn check_model_files(info: &HuggingFaceModelInfo) -> Result<()> {
         } else if ext.eq("safetensors") {
             let metadata = std::fs::metadata(p)?;
             if metadata.len() < 62914560u64 {
-                return Err(Error::ErrorWithMessage(format!(
+                return Err(Error::WithMessage(format!(
                     "{:?} file size is too small.",
                     p
                 )));
@@ -759,7 +756,7 @@ fn init_tokenizer(repo: &str) -> Result<Tokenizer> {
     let f = construct_model_file_path(repo, "tokenizer.json");
     match Tokenizer::from_file(&f) {
         Ok(t) => Ok(t),
-        Err(e) => Err(Error::ErrorWithMessage(format!("{}", &e))),
+        Err(e) => Err(Error::WithMessage(format!("{}", &e))),
     }
 }
 
@@ -863,13 +860,13 @@ fn load_safetensors(mirror: &str, json_file: &str) -> Result<Vec<String>> {
         serde_json::from_reader(&json_file).map_err(candle::Error::wrap)?;
     let weight_map = match json.get("weight_map") {
         None => {
-            return Err(Error::ErrorWithMessage(format!(
+            return Err(Error::WithMessage(format!(
                 "no weight map in {json_file:?}"
             )));
         }
         Some(serde_json::Value::Object(map)) => map,
         Some(_) => {
-            return Err(Error::ErrorWithMessage(format!(
+            return Err(Error::WithMessage(format!(
                 "weight map in {json_file:?} is not a map"
             )));
         }

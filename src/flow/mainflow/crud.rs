@@ -27,7 +27,7 @@ pub(crate) fn init_default_names(is_en: bool) -> Result<()> {
     };
     DEFAULT_NAMES
         .set((String::from(name), String::from(subflow_name)))
-        .map_err(|_| Error::ErrorWithMessage(String::from("Dup")))
+        .map_err(|_| Error::WithMessage(String::from("Dup")))
 }
 
 pub(crate) fn init(robot_id: &str) -> Result<MainFlowDetail> {
@@ -51,7 +51,7 @@ pub(crate) async fn list(Query(q): Query<HashMap<String, String>>) -> impl IntoR
     if let Some(robot_id) = q.get("robotId") {
         to_res::<Vec<MainFlowDetail>>(db_executor!(db::get_all, robot_id, TABLE_SUFFIX,))
     } else {
-        to_res(Err(Error::ErrorWithMessage(String::from(
+        to_res(Err(Error::WithMessage(String::from(
             "Parameter: robot_id is missing.",
         ))))
     }
@@ -64,7 +64,7 @@ pub(crate) async fn new(
     if let Some(robot_id) = q.get("robotId") {
         to_res::<MainFlowDetail>(create_main_flow(robot_id, &data.name))
     } else {
-        to_res(Err(Error::ErrorWithMessage(String::from(
+        to_res(Err(Error::WithMessage(String::from(
             "Parameter: robotId is missing.",
         ))))
     }
@@ -112,7 +112,7 @@ pub(crate) async fn save(
             &main_flow
         ))
     } else {
-        to_res(Err(Error::ErrorWithMessage(String::from(
+        to_res(Err(Error::WithMessage(String::from(
             "Parameter: robotId is missing.",
         ))))
     }
@@ -134,7 +134,7 @@ pub(crate) async fn delete(
             Err(e) => to_res(Err(e)),
         }
     } else {
-        to_res(Err(Error::ErrorWithMessage(String::from(
+        to_res(Err(Error::WithMessage(String::from(
             "Parameter: robotId is missing.",
         ))))
     }

@@ -46,10 +46,10 @@ pub(super) fn gen_text(
     let mut tokenizer = super::token_output_stream::TokenOutputStream::new(tokenizer.clone());
     let mut tokens = match tokenizer.tokenizer().encode(prompt, true) {
         Ok(t) => t.get_ids().to_vec(),
-        Err(e) => return Err(Error::ErrorWithMessage(format!("{}", &e))),
+        Err(e) => return Err(Error::WithMessage(format!("{}", &e))),
     };
     if tokens.is_empty() {
-        return Err(Error::ErrorWithMessage(String::from(
+        return Err(Error::WithMessage(String::from(
             "Empty prompts are not supported in the phi model.",
         )));
     }
@@ -57,7 +57,7 @@ pub(super) fn gen_text(
     let eos_token = match tokenizer.get_token("<|endoftext|>") {
         Some(token) => token,
         None => {
-            return Err(Error::ErrorWithMessage(String::from(
+            return Err(Error::WithMessage(String::from(
                 "cannot find the endoftext token",
             )));
         }

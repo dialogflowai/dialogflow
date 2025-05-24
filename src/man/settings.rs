@@ -291,7 +291,7 @@ pub(crate) fn init_global() -> Result<GlobalSettings> {
     let format = time::format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]]")
         .expect("Invalid format description");
     let t = time::OffsetDateTime::now_utc();
-    let t_str = t.format(&format).map_err(Error::TimeFormatError)?;
+    let t_str = t.format(&format).map_err(Error::TimeFormat)?;
     db::write(TABLE, "db_init_time", &t_str)?;
     db::write(TABLE, "version", &String::from(server::VERSION))?;
     Ok(settings)
@@ -335,7 +335,7 @@ pub(crate) fn save_global_settings(data: &GlobalSettings) -> Result<()> {
     let addr = format!("{}:{}", data.ip, data.port);
     let _: SocketAddr = addr.parse().map_err(|_| {
         log::error!("Saving invalid listen IP: {}", &addr);
-        Error::ErrorWithMessage(String::from("lang.settings.invalidIp"))
+        Error::WithMessage(String::from("lang.settings.invalidIp"))
     })?;
     db::write(TABLE, SETTINGS_KEY, &data)
 }
@@ -413,13 +413,13 @@ pub(crate) fn check_smtp_settings(settings: &Settings) -> Result<bool> {
 pub(crate) async fn download_model_files(Json(m): Json<HuggingFaceModel>) -> impl IntoResponse {
     let global_settings = get_global_settings();
     if global_settings.is_err() {
-        return to_res(Err(Error::ErrorWithMessage(String::from(
+        return to_res(Err(Error::WithMessage(String::from(
             "Load global settings failed.",
         ))));
     }
     let global_settings = global_settings.unwrap();
     if global_settings.is_none() {
-        return to_res(Err(Error::ErrorWithMessage(String::from(
+        return to_res(Err(Error::WithMessage(String::from(
             "Global settings not found.",
         ))));
     }
@@ -471,7 +471,7 @@ pub(crate) async fn check_model_files(bytes: Bytes) -> impl IntoResponse {
             }
             to_res(Ok(map))
         }
-        Err(e) => to_res(Err(Error::ErrorWithMessage(format!(
+        Err(e) => to_res(Err(Error::WithMessage(format!(
             "Invalid request body, err {:?}",
             &e
         )))),
@@ -488,9 +488,7 @@ pub(crate) async fn check_embedding_model(Query(q): Query<RobotQuery>) -> impl I
                 }
                 embedding::SentenceEmbeddingProvider::OpenAI(_) => {
                     if settings.sentence_embedding_provider.api_key.is_empty() {
-                        Err(Error::ErrorWithMessage(String::from(
-                            "OPENAI_API_KEY is empty.",
-                        )))
+                        Err(Error::WithMessage(String::from("OPENAI_API_KEY is empty.")))
                     } else {
                         Ok(())
                     }
@@ -498,12 +496,12 @@ pub(crate) async fn check_embedding_model(Query(q): Query<RobotQuery>) -> impl I
                 embedding::SentenceEmbeddingProvider::Ollama(_) => Ok(()),
             }
         } else {
-            Err(Error::ErrorWithMessage(String::from(
+            Err(Error::WithMessage(String::from(
                 "Can NOT find settings of this robot.",
             )))
         }
     } else {
-        Err(Error::ErrorWithMessage(String::from(
+        Err(Error::WithMessage(String::from(
             "Failed to get settings of this robot.",
         )))
     };

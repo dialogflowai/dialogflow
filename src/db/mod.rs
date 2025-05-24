@@ -199,7 +199,7 @@ where
             write_txn.commit()?;
             Ok(())
         }
-        Err(e) => Err(Error::ErrorWithMessage(format!("{:?}", e))),
+        Err(e) => Err(Error::WithMessage(format!("{:?}", e))),
     }
 }
 
@@ -325,7 +325,7 @@ pub(crate) fn save_txn(
                     table.insert(d.2, r.as_slice())?;
                 }
                 Err(e) => {
-                    err = Some(Error::ErrorWithMessage(format!("{:?}", e)));
+                    err = Some(Error::WithMessage(format!("{:?}", e)));
                     break;
                 }
             };
@@ -381,7 +381,7 @@ pub(crate) async fn init_sqlite_datasource(
         Ok(_f) => {}
         // Err(e: ErrorKind::NotFound) => None,
         Err(e) => {
-            return Err(Error::ErrorWithMessage(format!(
+            return Err(Error::WithMessage(format!(
                 "Created database file failed, err: {:?}",
                 &e
             )));
@@ -393,7 +393,7 @@ pub(crate) async fn init_sqlite_datasource(
         .acquire_timeout(core::time::Duration::from_secs(5))
         .test_before_acquire(true);
     if p.is_dir() {
-        return Err(Error::ErrorWithMessage(String::from(
+        return Err(Error::WithMessage(String::from(
             "Created database file failed, there is a directory called: {p}",
         )));
     }

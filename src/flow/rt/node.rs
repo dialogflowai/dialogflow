@@ -133,7 +133,7 @@ impl RuntimeNode for TextNode {
         req: &Request,
         ctx: &mut Context,
         response: &mut ResponseData,
-        channel_sender: &mut ResponseSenderWrapper,
+        _channel_sender: &mut ResponseSenderWrapper,
     ) -> bool {
         // log::info!("Into TextNode");
         // let now = std::time::Instant::now();
@@ -164,7 +164,7 @@ impl RuntimeNode for GotoMainFlowNode {
         _req: &Request,
         ctx: &mut Context,
         _response: &mut ResponseData,
-        channel_sender: &mut ResponseSenderWrapper,
+        _channel_sender: &mut ResponseSenderWrapper,
     ) -> bool {
         // println!("Into GotoMainFlowNode");
         ctx.main_flow_id.clear();
@@ -186,7 +186,7 @@ impl RuntimeNode for GotoAnotherNode {
         _req: &Request,
         ctx: &mut Context,
         _response: &mut ResponseData,
-        channel_sender: &mut ResponseSenderWrapper,
+        _channel_sender: &mut ResponseSenderWrapper,
     ) -> bool {
         // println!("Into GotoAnotherNode");
         add_next_node(ctx, &self.next_node_id);
@@ -209,7 +209,7 @@ impl RuntimeNode for CollectNode {
         req: &Request,
         ctx: &mut Context,
         response: &mut ResponseData,
-        channel_sender: &mut ResponseSenderWrapper,
+        _channel_sender: &mut ResponseSenderWrapper,
     ) -> bool {
         // println!("Into CollectNode");
         if let Some(r) = collector::collect(&req.user_input, &self.collect_type) {
@@ -244,7 +244,7 @@ impl RuntimeNode for ConditionNode {
         req: &Request,
         ctx: &mut Context,
         _response: &mut ResponseData,
-        channel_sender: &mut ResponseSenderWrapper,
+        _channel_sender: &mut ResponseSenderWrapper,
     ) -> bool {
         // println!("Into ConditionNode");
         let mut r = false;
@@ -275,7 +275,7 @@ impl RuntimeNode for TerminateNode {
         _req: &Request,
         _ctx: &mut Context,
         response: &mut ResponseData,
-        channel_sender: &mut ResponseSenderWrapper,
+        _channel_sender: &mut ResponseSenderWrapper,
     ) -> bool {
         // log::info!("Into TerminateNode");
         response.next_action = NextActionType::Terminate;
@@ -299,7 +299,7 @@ impl RuntimeNode for ExternalHttpCallNode {
         req: &Request,
         ctx: &mut Context,
         _response: &mut ResponseData,
-        channel_sender: &mut ResponseSenderWrapper,
+        _channel_sender: &mut ResponseSenderWrapper,
     ) -> bool {
         // println!("Into ExternalHttpCallNode");
         let mut goto_node_id = &self.next_node_id;
@@ -871,7 +871,7 @@ impl KnowledgeBaseAnswerNode {
             }
         }
     }
-    fn retrieve_doc_answer(&self, req: &Request) -> Option<String> {
+    fn retrieve_doc_answer(&self, _req: &Request) -> Option<String> {
         None
     }
     fn fallback_answer(&self, ctx: &mut Context, response: &mut ResponseData) -> bool {
@@ -900,7 +900,7 @@ impl RuntimeNode for KnowledgeBaseAnswerNode {
         req: &Request,
         ctx: &mut Context,
         response: &mut ResponseData,
-        channel_sender: &mut ResponseSenderWrapper,
+        _channel_sender: &mut ResponseSenderWrapper,
     ) -> bool {
         // log::info!("Into LlmChaKnowledgeBaseAnswerNodetNode");
         for answer_source in &self.retrieve_answer_sources {

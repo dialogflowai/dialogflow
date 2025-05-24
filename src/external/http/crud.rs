@@ -25,7 +25,7 @@ pub(crate) async fn list(Query(q): Query<HashMap<String, String>>) -> impl IntoR
         let r: Result<Vec<HttpReqInfo>> = db_executor!(db::get_all, &robot_id, TABLE_SUFFIX,);
         to_res(r)
     } else {
-        to_res(Err(Error::ErrorWithMessage(String::from(
+        to_res(Err(Error::WithMessage(String::from(
             "Parameter: robotId is missing.",
         ))))
     }
@@ -44,7 +44,7 @@ pub(crate) async fn detail(
         let r: Result<Option<HttpReqInfo>> = get_detail(robot_id, id.as_str());
         to_res(r)
     } else {
-        to_res(Err(Error::ErrorWithMessage(String::from(
+        to_res(Err(Error::WithMessage(String::from(
             "Parameter: robotId is missing.",
         ))))
     }
@@ -61,7 +61,7 @@ pub(crate) async fn save(
         let r = db_executor!(db::write, robot_id, TABLE_SUFFIX, &params.id, &params);
         to_res(r)
     } else {
-        to_res(Err(Error::ErrorWithMessage(String::from(
+        to_res(Err(Error::WithMessage(String::from(
             "Parameter: robotId is missing.",
         ))))
     }
@@ -75,7 +75,7 @@ pub(crate) async fn remove(
         let r = db_executor!(db::remove, &robot_id, TABLE_SUFFIX, id.as_str());
         to_res(r)
     } else {
-        to_res(Err(Error::ErrorWithMessage(String::from(
+        to_res(Err(Error::WithMessage(String::from(
             "Parameter: robotId is missing.",
         ))))
     }

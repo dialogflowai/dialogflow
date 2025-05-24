@@ -169,7 +169,7 @@ async function deleteRobot() {
       <el-icon :size="15">
         <EpArrowRightBold />
       </el-icon>
-      <router-link :to="{ name: 'kbDoc', params: { robotId: robotId } }">Documents management</router-link>
+      <router-link :to="{ name: 'kbDoc', params: { robotId: robotId } }">Documents management (WIP not usable yet)</router-link>
       <div class="description">
         {{ $t('lang.guide.desc2') }}<br />
         We have built-in "Positive" and "Negative" intentions. If that's not enough, you can add your own

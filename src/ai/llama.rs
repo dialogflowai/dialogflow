@@ -55,7 +55,7 @@ pub(super) fn gen_text(
     //     .to_vec();
     let mut tokens = match tokenizer.encode(prompt, true) {
         Ok(t) => t.get_ids().to_vec(),
-        Err(e) => return Err(Error::ErrorWithMessage(format!("{}", &e))),
+        Err(e) => return Err(Error::WithMessage(format!("{}", &e))),
     };
     log::info!("tokens len={}", tokens.len());
     let mut tokenizer = super::token_output_stream::TokenOutputStream::new(tokenizer.clone());

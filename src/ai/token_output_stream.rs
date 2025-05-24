@@ -24,7 +24,7 @@ impl TokenOutputStream {
     fn decode(&self, tokens: &[u32]) -> Result<String> {
         match self.tokenizer.decode(tokens, true) {
             Ok(str) => Ok(str),
-            Err(err) => Err(Error::ErrorWithMessage(format!("cannot decode: {err}"))),
+            Err(err) => Err(Error::WithMessage(format!("cannot decode: {err}"))),
         }
     }
 

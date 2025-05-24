@@ -20,7 +20,7 @@ pub(crate) fn convert_flow(is_en: bool, robot_id: &str, mainflow_id: &str) -> Re
         let r: Option<Vec<SubFlowDetail>> =
             db_executor!(db::query, robot_id, TABLE_SUFFIX, mainflow_id)?;
         if r.is_none() {
-            return Err(Error::ErrorWithMessage(String::from("Flow data not found")));
+            return Err(Error::WithMessage(String::from("Flow data not found")));
         }
         r.unwrap()
     };
@@ -83,7 +83,7 @@ fn check_first_node(
         }
         Ok(())
     } else {
-        Err(Error::ErrorWithMessage(format!(
+        Err(Error::WithMessage(format!(
             "Sub flow: {} can not find the start node.",
             f.name
         )))
@@ -107,7 +107,7 @@ fn convert_subflow(mainflow_id: &str, flow_idx: usize, f: &SubFlowDetail) -> Res
             );
         } else {
             if n.data.is_none() {
-                return Err(Error::ErrorWithMessage(String::from(
+                return Err(Error::WithMessage(String::from(
                     "Node data information not found",
                 )));
             }
@@ -121,7 +121,7 @@ fn convert_subflow(mainflow_id: &str, flow_idx: usize, f: &SubFlowDetail) -> Res
             if let Some(branches) = node.get_branches() {
                 for branch in branches.iter_mut() {
                     if branch.branch_id.is_empty() {
-                        return Err(Error::ErrorWithMessage(format!(
+                        return Err(Error::WithMessage(format!(
                             "Branch '{}' of '{}' id information not found",
                             branch.branch_name, f.name
                         )));
@@ -130,7 +130,7 @@ fn convert_subflow(mainflow_id: &str, flow_idx: usize, f: &SubFlowDetail) -> Res
                     if let Some(t) = target_node_id {
                         branch.target_node_id = t;
                     } else {
-                        return Err(Error::ErrorWithMessage(format!(
+                        return Err(Error::WithMessage(format!(
                             "Branch '{}' of '{}' target id information not found",
                             branch.branch_name, f.name
                         )));
@@ -242,7 +242,7 @@ fn convert_node(main_flow_id: &str, node: &mut Node) -> Result<()> {
                         failed_node_id.push_str(b.target_node_id.as_str())
                     }
                     _ => {
-                        return Err(Error::ErrorWithMessage(String::from(
+                        return Err(Error::WithMessage(String::from(
                             "Unknown collection branch type",
                         )));
                     }

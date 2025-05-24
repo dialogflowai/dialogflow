@@ -235,16 +235,12 @@ impl ConditionData {
                     }
                 }
                 CompareType::NotContains => {
-                    if let Ok(op) = variable::get(&req.robot_id, &self.ref_data) {
-                        if let Some(v) = op {
-                            if v.var_type == VariableType::Num {
-                                false
-                            } else if let Some(val) = v.get_value(req, ctx) {
-                                !val.val_to_string()
-                                    .contains(&self.get_target_data(req, ctx))
-                            } else {
-                                true
-                            }
+                    if let Ok(Some(v)) = variable::get(&req.robot_id, &self.ref_data) {
+                        if v.var_type == VariableType::Num {
+                            false
+                        } else if let Some(val) = v.get_value(req, ctx) {
+                            !val.val_to_string()
+                                .contains(&self.get_target_data(req, ctx))
                         } else {
                             true
                         }

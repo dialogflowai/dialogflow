@@ -99,5 +99,5 @@ pub(in crate::flow::rt) fn exec(
     } else {
         "执行次数太多，请检查流程配置是否正确。"
     };
-    Err(Error::ErrorWithMessage(String::from(m)))
+    Err(Error::WithMessage(String::from(m)))
 }

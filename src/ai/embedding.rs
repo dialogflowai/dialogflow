@@ -50,7 +50,7 @@ pub(crate) async fn embedding(robot_id: &str, s: &str) -> Result<(Vec<f32>, f32)
         }?;
         Ok((v, settings.sentence_embedding_provider.similarity_threshold))
     } else {
-        Err(Error::ErrorWithMessage(format!(
+        Err(Error::WithMessage(format!(
             "Can not find settings of {}",
             robot_id
         )))
@@ -84,7 +84,7 @@ fn hugging_face(robot_id: &str, info: &HuggingFaceModelInfo, s: &str) -> Result<
     // };
     let tokens = match t.encode(s, true) {
         Ok(t) => t.get_ids().to_vec(),
-        Err(e) => return Err(Error::ErrorWithMessage(format!("{}", &e))),
+        Err(e) => return Err(Error::WithMessage(format!("{}", &e))),
     };
     let token_ids = Tensor::new(&tokens[..], &m.device)?.unsqueeze(0)?;
     let token_type_ids = token_ids.zeros_like()?;
@@ -193,9 +193,7 @@ async fn ollama(
     let r = req.send().await?.text().await?;
     if r.len() < 10 {
         // log::info!("Response {}",&r);
-        return Err(Error::ErrorWithMessage(String::from(
-            "Invalid Ollama response.",
-        )));
+        return Err(Error::WithMessage(String::from("Invalid Ollama response.")));
     }
     // log::info!("Ollama embedding result {}", &r[0..50]);
     // log::info!("Ollama embedding result {}", &r);

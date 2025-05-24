@@ -33,7 +33,7 @@ pub(crate) async fn init_datasource() -> Result<()> {
     let pool = crate::db::init_sqlite_datasource(p.as_path()).await?;
     DATA_SOURCE
         .set(pool)
-        .map_err(|_| Error::ErrorWithMessage(String::from("Datasource has been set.")))
+        .map_err(|_| Error::WithMessage(String::from("Datasource has been set.")))
 }
 
 pub async fn shutdown_db() {

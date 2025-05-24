@@ -62,7 +62,7 @@ pub(crate) async fn list(Query(q): Query<HashMap<String, String>>) -> impl IntoR
     if let Some(robot_id) = q.get("robotId") {
         to_res::<Vec<Variable>>(db_executor!(db::get_all, robot_id, TABLE_SUFFIX,))
     } else {
-        to_res(Err(Error::ErrorWithMessage(String::from(
+        to_res(Err(Error::WithMessage(String::from(
             "Parameter: robotId is missing.",
         ))))
     }
@@ -106,7 +106,7 @@ pub(crate) async fn add(
             &v
         ))
     } else {
-        to_res(Err(Error::ErrorWithMessage(String::from(
+        to_res(Err(Error::WithMessage(String::from(
             "Parameter: robotId is missing.",
         ))))
     }
@@ -150,7 +150,7 @@ pub(crate) async fn delete(
             v.var_name.as_str()
         ))
     } else {
-        to_res(Err(Error::ErrorWithMessage(String::from(
+        to_res(Err(Error::WithMessage(String::from(
             "Parameter: robotId is missing.",
         ))))
     }

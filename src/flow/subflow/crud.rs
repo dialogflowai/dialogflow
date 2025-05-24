@@ -100,7 +100,7 @@ pub(crate) async fn save(
     let r: Result<Vec<SubFlowDetail>> = q
         .data
         .parse::<usize>()
-        .map_err(|e| Error::ErrorWithMessage(format!("{:?}", e)))
+        .map_err(|e| Error::WithMessage(format!("{:?}", e)))
         .and_then(|idx| {
             // let op: Option<Vec<SubFlowDetail>> = db::query(TABLE, form.main_flow_id.as_str())?;
             let op: Option<Vec<SubFlowDetail>> = db_executor!(
@@ -133,7 +133,7 @@ pub(crate) async fn delete(Query(q): Query<SubFlowFormData>) -> impl IntoRespons
     let r = q
         .data
         .parse::<usize>()
-        .map_err(|e| Error::ErrorWithMessage(format!("{:?}", e)))
+        .map_err(|e| Error::WithMessage(format!("{:?}", e)))
         .and_then(|idx| {
             let result: Result<Option<Vec<SubFlowDetail>>> = db_executor!(
                 db::query,

@@ -44,13 +44,13 @@ pub(super) fn gen_text(
     // let (model, tokenizer) = model.get(robot_id).unwrap();
     let mut tokens = match tokenizer.encode(prompt, true) {
         Ok(t) => t.get_ids().to_vec(),
-        Err(e) => return Err(Error::ErrorWithMessage(format!("{}", &e))),
+        Err(e) => return Err(Error::WithMessage(format!("{}", &e))),
     };
     let mut tokenizer = super::token_output_stream::TokenOutputStream::new(tokenizer.clone());
     let eos_token = match tokenizer.get_token("<eos>") {
         Some(token) => token,
         None => {
-            return Err(Error::ErrorWithMessage(String::from(
+            return Err(Error::WithMessage(String::from(
                 "cannot find the <eos> token",
             )));
         }

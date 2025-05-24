@@ -147,7 +147,7 @@ pub(crate) async fn list(Query(q): Query<HashMap<String, String>>) -> impl IntoR
         let r: Result<Vec<IntentDetail>> = db_executor!(db::get_all, robot_id, TABLE_SUFFIX,);
         to_res(r)
     } else {
-        to_res(Err(Error::ErrorWithMessage(String::from(
+        to_res(Err(Error::WithMessage(String::from(
             "Parameter: robotId is missing.",
         ))))
     }
@@ -235,7 +235,7 @@ pub(crate) async fn remove_keyword(Json(params): Json<IntentFormData>) -> impl I
         .parse::<usize>()
         .map_err(|e| {
             log::error!("{:?}", e);
-            Error::ErrorWithMessage(String::from("Invalid parameter"))
+            Error::WithMessage(String::from("Invalid parameter"))
         })
         .and_then(|idx| {
             let key = params.id.as_str();
@@ -276,7 +276,7 @@ pub(crate) async fn remove_regex(Json(params): Json<IntentFormData>) -> impl Int
         .parse::<usize>()
         .map_err(|e| {
             log::error!("{:?}", e);
-            Error::ErrorWithMessage(String::from("Invalid parameter"))
+            Error::WithMessage(String::from("Invalid parameter"))
         })
         .and_then(|idx| {
             let key = params.id.as_str();
@@ -309,7 +309,7 @@ pub(crate) async fn add_phrase(
     }
     let r = r.unwrap();
     if r.is_none() {
-        return to_res(Err(Error::ErrorWithMessage(String::from(
+        return to_res(Err(Error::WithMessage(String::from(
             "Can NOT find intention detail",
         ))));
     }
@@ -318,7 +318,7 @@ pub(crate) async fn add_phrase(
         .await
         .map_err(|e| {
             log::error!("{:#?}", &e);
-            Error::ErrorWithMessage(String::from("Invalid idx parameter."))
+            Error::WithMessage(String::from("Invalid idx parameter."))
         })
         .and_then(|vec_row_id| {
             d.phrases.push(IntentPhraseData {
@@ -380,9 +380,7 @@ pub(crate) async fn remove_phrase(Json(params): Json<IntentFormData>) -> impl In
         Ok(n) => n,
         Err(e) => {
             log::error!("{:?}", e);
-            return to_res(Err(Error::ErrorWithMessage(String::from(
-                "Invalid parameter",
-            ))));
+            return to_res(Err(Error::WithMessage(String::from("Invalid parameter"))));
         }
     };
     let key = params.id.as_str();
@@ -442,7 +440,7 @@ pub(crate) async fn regenerate_embeddings(
     }
     let r = r.unwrap();
     if r.is_none() {
-        return to_res(Err(Error::ErrorWithMessage(String::from(
+        return to_res(Err(Error::WithMessage(String::from(
             "Can NOT find intention detail",
         ))));
     }

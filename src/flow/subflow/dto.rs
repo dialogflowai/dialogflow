@@ -76,7 +76,7 @@ impl Node {
                 f.name, node_type, node_name, m
             )
         };
-        Err(Error::ErrorWithMessage(message))
+        Err(Error::WithMessage(message))
     }
 
     pub(crate) fn is_valid(&self, f: &SubFlowDetail) -> Result<()> {

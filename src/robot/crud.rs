@@ -50,7 +50,7 @@ pub(crate) async fn save(
         let is_en = server::is_en(&headers);
         d.robot_id = get_robot_id();
         if let Err(e) = new(&d, is_en).await {
-            return to_res(Err(Error::ErrorWithMessage(format!(
+            return to_res(Err(Error::WithMessage(format!(
                 "Failed to create robot, error detail was: {:?}",
                 &e
             ))));
