@@ -74,7 +74,7 @@ env_logger = "0.11.8"
 lettre = { version = "0.11.18", default-features = false, features = ["builder", "tokio1", "smtp-transport", "tokio1-native-tls", "pool"]}
 unicase = "2.8.1"
 sqlx = { version = "0.8.6", default-features = false, features = ["runtime-tokio", "sqlite", "macros"] }
-lopdf = "0.37.0"
+lopdf = "0.38.0"
 # docx-rs = "0.4.17"
 # lancedb = "0.13.0"
 libsqlite3-sys = { version = "0.30", features = ["bundled"] }
