@@ -52,7 +52,7 @@ itoa = "1.0.15"
 # paste = "1.0"
 redb = "3.1.0"
 regex = "1.12.2"
-reqwest = { version = "0.13.1", default-features = false, features = ["native-tls", "stream"] }
+reqwest = { version = "0.13.1", default-features = false, features = ["native-tls", "stream", "query"] }
 rkyv = {version = "0.8.13", features = ["aligned", "alloc", "bytecheck"]}
 scru128 = "3.2.3"
 serde = { version = "1.0.228", features = ["derive"] }
