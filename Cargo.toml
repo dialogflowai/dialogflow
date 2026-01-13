@@ -80,7 +80,7 @@ lopdf = "0.38.0"
 # libsqlite3-sys = { version = "0.30", features = ["bundled"] }
 validator = "0.20"
 zip = "6.0.0"
-quick-xml = "0.38.4"
+quick-xml = "0.39.0"
 # usearch = "2.17"
 # cxx = "1.0"
 # triple_accel = "0.4.0"
