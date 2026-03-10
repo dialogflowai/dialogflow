@@ -410,6 +410,7 @@ onMounted(async () => {
             allowLoop: false,
             allowNode: true,
             allowMulti: true,
+            connector: { name: "smooth" },
             // http://x6.antv.antgroup.com/tutorial/basic/interacting#createedge
             createEdge() {
                 return this.createEdge({
@@ -1060,8 +1061,7 @@ const popupRundryWindow = async () => {
                                 size="large"
                                 v-show="!isDemo"
                             >
-                                <el-icon :size="20">
-                                    <EpEdit /> </el-icon
+                                <el-icon :size="20"> <EpEdit /> </el-icon
                                 >{{ $t("flow.save") }}
                             </el-button>
                             <el-button
@@ -1070,8 +1070,7 @@ const popupRundryWindow = async () => {
                                 :loading="releaseLoading"
                                 size="large"
                             >
-                                <el-icon :size="20">
-                                    <EpFinished /> </el-icon
+                                <el-icon :size="20"> <EpFinished /> </el-icon
                                 >{{ $t("flow.pub") }}
                             </el-button>
                             <!-- <div class="testBtn" @click="dryrun(); testingFormVisible = true">
