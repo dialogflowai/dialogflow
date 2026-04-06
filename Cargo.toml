@@ -54,7 +54,7 @@ redb = "3.1.0"
 regex = "1.12.3"
 reqwest = { version = "0.13.2", default-features = false, features = ["native-tls", "stream", "query"] }
 rkyv = {version = "0.8.15", features = ["aligned", "alloc", "bytecheck"]}
-scru128 = "3.5.0"
+scru128 = "4.1.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 scraper = "0.25.0"
