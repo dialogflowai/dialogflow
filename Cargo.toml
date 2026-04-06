@@ -50,7 +50,7 @@ itoa = "1.0.17"
 # once_cell = "1.20"
 # ort = { version = "=2.0.0-rc.0", default-features = false }
 # paste = "1.0"
-redb = "3.1.0"
+redb = "4.0.0"
 regex = "1.12.3"
 reqwest = { version = "0.13.2", default-features = false, features = ["native-tls", "stream", "query"] }
 rkyv = {version = "0.8.15", features = ["aligned", "alloc", "bytecheck"]}
