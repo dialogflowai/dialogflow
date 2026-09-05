@@ -34,7 +34,7 @@ candle-transformers = { version = "0.11.0" }
 # candle-transformers = { version = "0.9.1", features = ["flash-attn"] }
 # crossbeam-channel = "0.5"
 frand = "0.10.1"
-tokenizers = "0.23.1"
+tokenizers = "0.23.2"
 # candle_embed = "0.1"
 colored = "3.1.1"
 # dashmap = "5.5.1"
@@ -64,7 +64,7 @@ scraper = "0.27.0"
 # strsim = "0.10.0"
 # textdistance = "1.0.2"
 time = { version = "0.3.55", features = ["formatting"] }
-tower-http = { version = "0.7.0", features = ["cors", "limit"] }
+tower-http = { version = "0.7.1", features = ["cors", "limit"] }
 # typetag = "0.2"
 tokio = { version = "1.53.1", features = ["fs", "io-util", "macros", "net", "rt", "rt-multi-thread", "signal", "time", "tracing"] }
 tokio-stream = "0.1.19"

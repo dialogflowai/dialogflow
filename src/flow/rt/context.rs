@@ -24,6 +24,11 @@ pub(crate) const CONTEXT_KEY: &str = "contexts";
 //     session_id: String,
 // }
 
+pub(crate) enum UserInputIntent {
+    Unknown,
+    Detected(String),
+}
+
 #[derive(Deserialize, Serialize)]
 pub(crate) struct Context {
     robot_id: String,
@@ -32,6 +37,8 @@ pub(crate) struct Context {
     pub(in crate::flow::rt) node: Option<Vec<u8>>,
     pub(in crate::flow::rt) nodes: LinkedList<String>,
     pub(crate) vars: HashMap<String, VariableValue>,
+    #[serde(skip)]
+    user_input_intent: Option<UserInputIntent>,
     #[serde(skip)]
     pub(crate) none_persistent_vars: HashMap<String, VariableValue>,
     #[serde(skip)]
@@ -50,6 +57,36 @@ impl Context {
                 .to_string(),
         });
         l
+    }
+
+    pub(crate) fn set_user_input_intent(&mut self, intent: String) {
+        self.user_input_intent = Some(UserInputIntent::Detected(intent));
+    }
+
+    pub(crate) async fn get_user_input_intent(
+        &mut self,
+        req: &crate::flow::rt::dto::Request,
+    ) -> Result<&UserInputIntent> {
+        if self.user_input_intent.is_none()
+            && req.user_input_result == crate::flow::rt::dto::UserInputResult::Successful
+            && !req.user_input.is_empty()
+        {
+            let user_input_intent =
+                crate::intent::detector::detect(&req.robot_id, &req.user_input).await?;
+            if user_input_intent.is_none() {
+                log::info!("No intent detected for user input: {}", req.user_input);
+                self.user_input_intent = Some(UserInputIntent::Unknown);
+            } else {
+                log::info!(
+                    "Detected intent for user input '{}': {}",
+                    req.user_input,
+                    user_input_intent.as_ref().unwrap()
+                );
+                self.user_input_intent =
+                    Some(UserInputIntent::Detected(user_input_intent.unwrap()));
+            }
+        }
+        Ok(self.user_input_intent.as_ref().unwrap())
     }
 }
 
@@ -77,6 +114,7 @@ impl Context {
             node: None,
             nodes: LinkedList::new(),
             vars: HashMap::with_capacity(16),
+            user_input_intent: None,
             none_persistent_vars: HashMap::with_capacity(16),
             none_persistent_data: HashMap::with_capacity(16),
             last_active_time: SystemTime::now()

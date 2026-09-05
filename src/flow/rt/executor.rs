@@ -35,12 +35,11 @@ pub(in crate::flow::rt) async fn process(
     }
     // log::info!("add_node time {:?}", now.elapsed());
     // let now = std::time::Instant::now();
-    if req.user_input_intent.is_none()
-        && req.user_input_result == UserInputResult::Successful
-        && !req.user_input.is_empty()
-    {
-        req.user_input_intent = detector::detect(&req.robot_id, &req.user_input).await?;
+    if req.user_input_intent.is_some() {
+        // req.user_input_intent = detector::detect(&req.robot_id, &req.user_input).await?;
         // println!("{:?}", req.user_input_intent);
+        let user_input_intent = std::mem::take(&mut req.user_input_intent);
+        ctx.set_user_input_intent(user_input_intent.unwrap())
     }
     // log::info!("Intent detection took {:?}", now.elapsed());
     if req.import_variables.is_some() {

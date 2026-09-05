@@ -699,12 +699,14 @@ impl LlmChatNode {
         self.cur_run_times += 1;
         let mut check_contains_str: Option<&String> = None;
         match &self.exit_condition {
-            LlmChatNodeExitCondition::Intent(i) => {
-                if req.user_input_intent.is_some() && req.user_input_intent.as_ref().unwrap().eq(i)
-                {
-                    return false;
+            LlmChatNodeExitCondition::Intent(i) => match ctx.get_user_input_intent(req).await {
+                Ok(crate::flow::rt::context::UserInputIntent::Detected(intent)) => {
+                    if intent.eq(i) {
+                        return false;
+                    }
                 }
-            }
+                _ => {}
+            },
             LlmChatNodeExitCondition::SpecialInputs(s) => {
                 if req.user_input.eq(s) {
                     // log::info!("886 {}", &self.next_node_id);

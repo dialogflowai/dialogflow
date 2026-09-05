@@ -150,11 +150,18 @@ impl ConditionData {
             },
             ConditionType::UserIntent => {
                 // println!("{} {}", &target_data, req.user_input_intent.is_some());
-                req.user_input_intent.is_some()
-                    && self
-                        .get_target_data(req, ctx)
-                        .await
-                        .eq(req.user_input_intent.as_ref().unwrap())
+                match ctx.get_user_input_intent(req).await {
+                    Ok(crate::flow::rt::context::UserInputIntent::Detected(intent)) => {
+                        let i = String::from(intent);
+                        return self.get_target_data(req, ctx).await.eq(&i);
+                    }
+                    _ => false,
+                }
+                // req.user_input_intent.is_some()
+                //     && self
+                //         .get_target_data(req, ctx)
+                //         .await
+                //         .eq(req.user_input_intent.as_ref().unwrap())
             }
             ConditionType::FlowVariable => match self.compare_type {
                 CompareType::HasValue => {
