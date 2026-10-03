@@ -95,6 +95,11 @@ pub(crate) async fn init_tables(robot_id: &str) -> Result<()> {
     })
 }
 
+/// 列出该机器人的全部问答对。
+///
+/// 重建索引的编排层（`man::reindex`）要遍历它们逐个重算向量。直接复用 `save` 而不是
+/// 自己拼 INSERT：`save` 会连带把 `qa_data` 里的 `vec_row_id` 刷新成新行号，漏掉这
+/// 一步会让后续编辑指向已经不存在（或已换人）的向量行。
 pub(crate) async fn list(robot_id: &str) -> Result<Vec<QuestionAnswerPair>> {
     let conn = conn()?;
     let sql = format!("SELECT qa_data FROM {robot_id} ORDER BY created_at DESC",);
@@ -211,6 +216,26 @@ pub(crate) async fn save(robot_id: &str, mut d: QuestionAnswerPair) -> Result<i6
     }
     Ok(record_id)
 }
+
+/// 只删向量表（重建索引用）。
+///
+/// 与 [`remove_tables`] 的区别：**主表不动**。`{robot_id}` 里存的是 `qa_data`（问题、
+/// 相似问题、答案的 JSON），它是重建向量的**载荷**；`{robot_id}_vec` 才是可以随便
+/// 丢掉重算的那一半。
+///
+/// 为什么重建要整表丢掉而不是逐条覆盖：已经被删掉的问答对会留下孤儿向量行，它们的
+/// 维度还是旧配置的，`vector_distance_cos` 扫到就会让整条检索报错——那正是重建要修的
+/// 东西。`qa::save` 每次会重新指派 `qa_data` 里的 `vec_row_id`，所以丢掉行号也没有
+/// 后顾之忧。
+pub(crate) async fn remove_vector_table(robot_id: &str) -> Result<()> {
+    let sql = format!("DROP TABLE IF EXISTS {robot_id}_vec;");
+    retry_on_busy!(async {
+        let conn = conn()?;
+        conn.execute(sql.as_str(), ()).await?;
+        Ok(())
+    })
+}
+
 /// 删掉该机器人在 `qa.dat` 里的两张表（`robot::purge` 用）。
 ///
 /// 两张表都是懒创建的（第一次 `list`/`save` 才会建），所以必须 `IF EXISTS`。

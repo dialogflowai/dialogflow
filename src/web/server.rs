@@ -304,6 +304,18 @@ fn gen_router() -> Router {
             get(settings::vector_dimensions),
         )
         .route(
+            "/management/settings/embedding/reindex",
+            post(crate::man::reindex::start),
+        )
+        .route(
+            "/management/settings/embedding/reindex/progress",
+            get(crate::man::reindex::progress),
+        )
+        .route(
+            "/management/settings/embedding/reindex/hint",
+            get(crate::man::reindex::hint),
+        )
+        .route(
             "/management/settings/model/openai/list",
             get(settings::list_openai_models),
         )

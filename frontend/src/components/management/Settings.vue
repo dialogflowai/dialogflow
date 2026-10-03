@@ -163,7 +163,9 @@ const sentenceEmbeddingApiUrl = computed({
     set: (v) => (settings.sentenceEmbeddingProvider.apiUrl = v),
 });
 
-onMounted(async () => {
+// 拉一次设置并铺进内存。抽成函数是因为重建索引跑完之后要**再拉一次**——那时后端
+// 已经把"库里那份索引是哪来的"标记改成当前配置，设置页那条警告该消了。
+async function loadSettings() {
     const r = await httpReq(
         "GET",
         "management/settings",
@@ -171,7 +173,8 @@ onMounted(async () => {
         null,
         null,
     );
-    if (r.status == 200) {
+    if (r.status != 200) return;
+    {
         // `copyProperties` 跳过值为 null / undefined 的键（见 assets/tools.js），
         // 这对"用响应合并默认值"是对的，但**后端明确为 null 的字段就合并不进来**，
         // 内存里会留着上一轮的旧值。本对象里有三个字段合法地就是 null：
@@ -236,6 +239,12 @@ onMounted(async () => {
         );
     }
     await checkHfModelFiles();
+}
+
+onMounted(async () => {
+    await loadSettings();
+    // 上次打开页面时启动的重建可能还在跑（或者刚跑完/失败了）：只显示，不弹窗。
+    await refreshReindexStatus();
     // 上一次保存触发的后台装载可能还在跑，或者上一次装载失败的原因还在：只显示，
     // 不弹窗（那是历史，不是刚发生的事）。
     await refreshModelLoadStatus(false);
@@ -243,6 +252,7 @@ onMounted(async () => {
 onUnmounted(() => {
     if (timeoutID != null) clearTimeout(timeoutID);
     if (loadTimeoutID != null) clearTimeout(loadTimeoutID);
+    if (reindexTimeoutID != null) clearTimeout(reindexTimeoutID);
 });
 
 // 本地模型在候选列表里的 value 就是后端认的模型名（枚举名，如 Qwen3_0_6B）。
@@ -1382,6 +1392,106 @@ const vectorDimensionsVerdict = computed(() => {
     return { type: "success", key: "botSettings.vectorDimensionsOk" };
 });
 
+// 「重建向量索引」：换模型/换维度之后，库里旧向量已经不可用（换模型＝噪声，换维度＝
+// 直接报错），而原文都还在，所以只需要重算。这是一次**后台任务**——一份长文档就是
+// 几百个 chunk，同步做会把请求挂死——所以点完立刻返回，然后每秒轮询进度。
+const reindexing = ref(false);
+const reindexStatus = reactive({
+    phase: null,
+    intents: { done: 0, total: 0, before: 0, after: 0 },
+    qa: { done: 0, total: 0, before: 0, after: 0 },
+    docs: { done: 0, total: 0, before: 0, after: 0 },
+    err: "",
+});
+let reindexTimeoutID = null;
+const reindexPhases = ["starting", "intents", "qa", "docs"];
+
+// 进度条：某一类的 done/total。total 还没统计出来（0）时返回 0，界面显示"准备中"。
+const reindexPercent = (p) =>
+    p.total > 0 ? Math.min(100, Math.round((p.done / p.total) * 100)) : 0;
+
+const reindexPhaseText = computed(() => {
+    switch (reindexStatus.phase) {
+        case "starting":
+            return t("botSettings.reindexPhaseStarting");
+        case "intents":
+            return t("botSettings.reindexPhaseIntents");
+        case "qa":
+            return t("botSettings.reindexPhaseQa");
+        case "docs":
+            return t("botSettings.reindexPhaseDocs");
+        default:
+            return "";
+    }
+});
+
+const refreshReindexStatus = async () => {
+    if (reindexTimeoutID != null) {
+        clearTimeout(reindexTimeoutID);
+        reindexTimeoutID = null;
+    }
+    const r = await httpReq(
+        "GET",
+        "management/settings/embedding/reindex/progress",
+        { robotId: robotId },
+        null,
+        null,
+    );
+    if (r == null || r.data == null) return;
+    for (const k of ["intents", "qa", "docs"]) {
+        const src = r.data[k];
+        if (src == null) continue;
+        Object.assign(reindexStatus[k], src);
+    }
+    reindexStatus.phase = r.data.phase ?? null;
+    reindexStatus.err = r.data.err || "";
+    reindexing.value = reindexPhases.includes(reindexStatus.phase);
+    if (reindexing.value) reindexTimeoutID = setTimeout(refreshReindexStatus, 1000);
+    else if (reindexStatus.phase == "done") {
+        // 重建已成功：把上一轮留下的失败原因清掉，否则成功提示旁边会一直挂着旧错误。
+        reindexStatus.err = "";
+        // 重建完成之后库里那份索引就是当前配置了 → 设置页那条"模型/维度变了"的警告
+        // 应该消失。后端已经把标记打成新指纹，这里跟着刷新一次设置。
+        await loadSettings();
+    }
+};
+
+// 重建入口。在线（收费）模型先问一句——一次重建就是"每条数据一次调用"。
+const startReindex = async () => {
+    const remote =
+        settings.sentenceEmbeddingProvider.provider.id != "HuggingFace";
+    try {
+        await ElMessageBox.confirm(
+            remote
+                ? t("botSettings.reindexConfirmRemote")
+                : t("botSettings.reindexConfirm", { model: "" }),
+            t("common.warning"),
+            {
+                confirmButtonText: t("botSettings.reindexStart"),
+                cancelButtonText: t("common.cancel"),
+                type: "warning",
+                dangerouslyUseHTMLString: true,
+            },
+        );
+    } catch {
+        return;
+    }
+    const r = await httpReq(
+        "POST",
+        "management/settings/embedding/reindex",
+        { robotId: robotId },
+        null,
+        null,
+    );
+    if (r?.status != 200) {
+        ElMessage.error(r?.err?.message || t("botSettings.reindexStartFailed"));
+        return;
+    }
+    reindexStatus.phase = "starting";
+    reindexing.value = true;
+    await refreshReindexStatus();
+};
+
 const fetchSentenceEmbeddingModelList = async () => {
     if (!settings.sentenceEmbeddingProvider.apiUrl) return;
     sentenceEmbeddingModelListLoading.value = true;
@@ -2077,6 +2187,72 @@ const usedBySentenceEmbeddingBig = [sentenceEmbeddingPic];
             >
                 {{ $t("botSettings.checkVectorDimensions") }}
             </el-button>
+            <el-button
+                class="action-btn"
+                size="small"
+                type="warning"
+                plain
+                :loading="reindexing"
+                :disabled="reindexing"
+                @click="startReindex"
+            >
+                {{ $t("botSettings.reindex") }}
+            </el-button>
+            <el-tooltip effect="light" placement="top">
+                <template #content>
+                    {{ $t("botSettings.reindexTip") }}
+                </template>
+                <el-button circle size="small">?</el-button>
+            </el-tooltip>
+        </div>
+        <div v-if="reindexing || reindexStatus.phase == 'done'" class="reindex-panel">
+            <div class="reindex-phase">
+                {{
+                    reindexing
+                        ? reindexPhaseText
+                        : $t("botSettings.reindexDone")
+                }}
+            </div>
+            <div
+                v-for="k in ['intents', 'qa', 'docs']"
+                :key="k"
+                class="reindex-source"
+            >
+                <span class="reindex-source-name">
+                    {{
+                        $t(
+                            {
+                                intents: "botSettings.reindexPhaseIntents",
+                                qa: "botSettings.reindexPhaseQa",
+                                docs: "botSettings.reindexPhaseDocs",
+                            }[k],
+                        )
+                    }}
+                </span>
+                <el-progress
+                    :percentage="reindexPercent(reindexStatus[k])"
+                    :stroke-width="10"
+                    style="flex: 1"
+                />
+                <span class="reindex-count">
+                    {{ reindexStatus[k].done }}/{{ reindexStatus[k].total }}
+                    <template v-if="!reindexing">
+                        ·
+                        {{
+                            $t("botSettings.reindexRows", {
+                                before: reindexStatus[k].before,
+                                after: reindexStatus[k].after,
+                            })
+                        }}
+                    </template>
+                </span>
+            </div>
+        </div>
+        <div
+            v-if="reindexStatus.phase == 'failed' && reindexStatus.err"
+            class="model-load-status is-error"
+        >
+            {{ $t("botSettings.reindexFailed", { err: reindexStatus.err }) }}
         </div>
         <el-dialog
             v-model="vectorDimensionsVisible"
@@ -2356,13 +2532,48 @@ const usedBySentenceEmbeddingBig = [sentenceEmbeddingPic];
     color: var(--el-text-color-placeholder, #a8abb2);
 }
 
+/* 重建索引进度：三行"来源 + 进度条 + 计数"。跑的时候每秒刷一次，所以尽量少动布局
+   （只有进度条宽度和数字在变）。 */
+.reindex-panel {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--el-border-color-lighter, #ebeef5);
+    border-radius: 4px;
+    background: var(--el-fill-color-lighter, #fafafa);
+}
+
+.reindex-phase {
+    font-size: 12px;
+    color: var(--el-text-color-regular, #606266);
+    margin-bottom: 6px;
+}
+
+.reindex-source {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary, #909399);
+}
+
+.reindex-source-name {
+    width: 150px;
+    flex-shrink: 0;
+}
+
+.reindex-count {
+    width: 190px;
+    flex-shrink: 0;
+    text-align: right;
+    white-space: nowrap;
+}
+
 .proxy-row {
     display: flex;
     align-items: center;
     gap: 12px;
     width: 100%;
 }
-
 /* 开关不参与收缩，"启用" 等文案保持单行显示 */
 .proxy-row :deep(.el-switch) {
     flex-shrink: 0;

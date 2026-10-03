@@ -113,7 +113,11 @@ pub(crate) async fn init_tables(robot_id: &str) -> Result<()> {
 //     }
 // }
 
-pub(super) async fn list(robot_id: &str) -> Result<Vec<DocData>> {
+/// 列出该机器人的全部文档（不带分块，只要正文）。
+///
+/// `pub(crate)`（原来是 `pub(super)`）：重建索引的编排层（`man::reindex`）要遍历它们
+/// 逐个重算向量。
+pub(crate) async fn list(robot_id: &str) -> Result<Vec<DocData>> {
     let sql = format!(
         "SELECT id, file_name, file_size, doc_content FROM {robot_id} ORDER BY created_at DESC"
     );
@@ -198,6 +202,47 @@ pub(super) async fn update(robot_id: &str, doc_id: i64, doc_content: &str) -> Re
         log::warn!("Stamping embedding index of {robot_id} failed: {e:?}");
     }
     Ok(())
+}
+
+/// 拿该文档**已经存在**的正文重算向量（正文本身不动）。
+///
+/// 这是「重建索引」的入口：换了 embedding 模型或维度之后，`doc_content` / `chunk_text`
+/// 里的原文还是好的，只是向量不能用了（换模型是噪声，换维度直接报错），所以只需要
+/// 重算，不需要用户重新上传。返回这次写进去的 chunk 数。
+///
+/// 与 `update` 的写库动作一致：删掉该 doc_id 的旧向量、写入新向量，同一个事务里完成。
+/// 分块会按**当前** provider 的参数重新切（见 `doc_embeddings` 里 short/long context
+/// 的选择），所以换模型后 chunk 数可能变。
+pub(crate) async fn reindex(robot_id: &str, doc_id: i64) -> Result<usize> {
+    let doc_content = read_doc_content(robot_id, doc_id).await?;
+    let (chunks, embeddings, vec_size) = doc_embeddings(robot_id, &doc_content).await?;
+    let n = chunks.len();
+    retry_on_busy!(async {
+        let mut conn = conn()?;
+        let tx = conn.transaction().await?;
+        let sql = format!("DELETE FROM {robot_id}_vec WHERE doc_id = ?1");
+        tx.execute(sql.as_str(), [doc_id]).await?;
+        save_doc_embedding(&tx, robot_id, doc_id, &chunks, &embeddings, vec_size).await?;
+        tx.commit().await?;
+        Ok(())
+    })?;
+    // 这里**不**打 `stamp_embedding_index`：重建是分批进行的，每篇文档都打一次会把
+    // 标记提前改成"已经是新配置"，而那时别的表还是旧向量 —— 编排层（man::reindex）
+    // 在全部跑完之后统一打一次。
+    Ok(n)
+}
+
+/// 读一篇文档的正文。找不到（已被删掉）就报错，交给编排层终止整轮重建。
+async fn read_doc_content(robot_id: &str, doc_id: i64) -> Result<String> {
+    let sql = format!("SELECT doc_content FROM {robot_id} WHERE id = ?1");
+    let conn = conn()?;
+    let mut rows = conn.query(sql, [doc_id]).await?;
+    match rows.next().await? {
+        Some(row) => Ok(String::from(row.get_value(0)?.as_text().unwrap())),
+        None => Err(Error::WithMessage(format!(
+            "Document {doc_id} does not exist any more, reindex aborted."
+        ))),
+    }
 }
 
 /// 删掉该机器人在 `doc.dat` 里的两张表（`robot::purge` 用）。

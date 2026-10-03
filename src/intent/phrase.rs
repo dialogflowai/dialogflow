@@ -229,6 +229,21 @@ pub(crate) async fn add(
 /// 2. 全部写操作合并进**一个**事务，成功或失败都是原子的。
 ///
 /// 语义与原来的逐条 `add(Some(id), …)` 一致：按 id 更新已存在的向量行。
+pub(crate) async fn reindex(
+    robot_id: &str,
+    intents: &[crate::intent::dto::IntentDetail],
+) -> Result<usize> {
+    let mut n = 0usize;
+    for d in intents {
+        if d.phrases.is_empty() {
+            continue;
+        }
+        batch_add(robot_id, &d.intent_id, &d.intent_name, &d.phrases).await?;
+        n += d.phrases.len();
+    }
+    Ok(n)
+}
+
 pub(crate) async fn batch_add(
     robot_id: &str,
     intent_id: &str,

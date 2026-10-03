@@ -32,6 +32,8 @@ use std::vec::Vec;
 use serde::Serialize;
 use turso::{Connection, Database};
 
+use crate::result::Result;
+
 /// 一个机器人 + 一处向量列在库里的实际情况。
 #[derive(Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -223,7 +225,40 @@ fn missing(t: &Target) -> VectorColumn {
     }
 }
 
+/// 数一张表有多少行，供重建索引用（`man::reindex` 展示"重建前有多少条"）。
+///
+/// **表不存在不是错误**：三张向量表都是懒创建的，没有数据时它根本不存在，此时答案是
+/// 0。所以这里把"no such table"吞掉返回 0，只把真正打不开文件之类的错误往上报。
+pub(crate) async fn count_rows(file: &str, table: &str) -> Result<usize> {
+    let path = format!("./data/{file}");
+    let Some(db) = open_read_only(&path).await else {
+        return Ok(0);
+    };
+    let conn = db.connect()?;
+    // 表名来自调用方的常量/注册表 id，不是用户输入；`robot_id` 是 scru128，无引号风险。
+    let sql = format!("SELECT count(*) FROM {table}");
+    let mut rows = match conn.query(sql.as_str(), ()).await {
+        Ok(r) => r,
+        Err(e) => {
+            log::debug!("Counting {table} in {file} failed (treated as 0): {e}");
+            return Ok(0);
+        }
+    };
+    match rows.next().await {
+        Ok(Some(row)) => Ok(row
+            .get_value(0)
+            .ok()
+            .and_then(|v| v.as_integer().copied())
+            .unwrap_or(0) as usize),
+        _ => Ok(0),
+    }
+}
+
 /// 从一个库里把表名列出来（表名就是机器人 id / `{robot_id}_vec`）。
+///
+/// 只有命令行报告（下面的 `report_vector_dimensions` 测试）用它来"自动认出有哪些
+/// 机器人"，所以挂在 `cfg(test)` 下——生产代码里没有调用点。
+#[cfg(test)]
 pub(crate) async fn table_names(path: &str) -> Vec<String> {
     let Some(db) = open_read_only(path).await else {
         return Vec::new();
@@ -257,6 +292,7 @@ pub(crate) async fn table_names(path: &str) -> Vec<String> {
 /// 内部表（`sqlite_*`、turso 的自增序列）要排掉。
 ///
 /// 只用于**诊断展示**，不做存在性校验。
+#[cfg(test)]
 pub(crate) fn robots_from_table_names(names: &[String]) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
     for n in names {

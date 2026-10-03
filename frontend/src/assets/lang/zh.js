@@ -341,6 +341,24 @@ export default {
     vectorDimensionsMixed:
         "库里同时存在两种维度的向量：这是改维度时留下的一半新一半旧，检索会直接报错。需要重建整张向量表。",
     vectorDimensionsFailed: "检测已存向量维度失败",
+    reindex: "重建向量索引",
+    reindexTip:
+        "换了向量模型或向量维度之后必须做这一步：库里旧向量和新配置不是同一个空间，检索会给出错误结果或直接失败。原文都还在库里，重建**不需要重新上传任何资料**。重建期间请先不要使用知识库与意图识别。",
+    reindexConfirm:
+        "将重新计算该机器人全部意图短语、问答和文档分块的向量。用的是当前配置的模型{model}，数据量大时可能需要几分钟，期间检索不可用。确定开始吗？",
+    reindexConfirmRemote:
+        "当前用的是在线（收费）模型：重建会对每条数据发起一次调用，可能产生费用。继续吗？",
+    reindexStart: "开始重建",
+    reindexRunning: "重建进行中，请勿离开本页……",
+    reindexPhaseIntents: "正在重建意图相似句",
+    reindexPhaseQa: "正在重建问答",
+    reindexPhaseDocs: "正在重建文档分块",
+    reindexPhaseStarting: "正在准备……",
+    reindexDone: "重建完成。",
+    reindexFailed: "重建失败：{err}",
+    reindexRows: "{before} → {after} 条向量",
+    reindexNothing: "没有需要重建的数据。",
+    reindexStartFailed: "启动重建失败",
     hfModelMissing: "HuggingFace 模型文件不正确或缺失，请",
     hfModelDownloadLink: "点击此处从 Huggingface.co 下载模型文件",
     hfModelManual: "，或者手动下载后放到 {path} 目录",

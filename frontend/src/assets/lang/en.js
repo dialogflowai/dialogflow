@@ -370,6 +370,24 @@ export default {
     vectorDimensionsMixed:
         "Two different dimensions coexist in the same store: a previous dimension change left half of the rows behind. Retrieval fails outright; the whole vector table must be rebuilt.",
     vectorDimensionsFailed: "Checking stored vector dimensions failed",
+    reindex: "Rebuild vector index",
+    reindexTip:
+        "This step is required after changing the embedding model or its dimensions: the stored vectors no longer live in the same space as the new setting, so retrieval either returns wrong results or fails outright. The source text is still in the database, so rebuilding needs no re-upload. Please avoid using the knowledge base and intent detection while it runs.",
+    reindexConfirm:
+        "All intent phrases, Q&A pairs and document chunks of this robot will be re-embedded with the current model{model}. Large datasets can take several minutes, and retrieval is unavailable meanwhile. Start now?",
+    reindexConfirmRemote:
+        "The current provider is a remote (paid) one: rebuilding makes one call per item and may incur fees. Continue?",
+    reindexStart: "Start rebuilding",
+    reindexRunning: "Rebuilding, please keep this page open…",
+    reindexPhaseIntents: "Rebuilding intent phrases",
+    reindexPhaseQa: "Rebuilding Q&A",
+    reindexPhaseDocs: "Rebuilding document chunks",
+    reindexPhaseStarting: "Preparing…",
+    reindexDone: "Rebuild finished.",
+    reindexFailed: "Rebuild failed: {err}",
+    reindexRows: "{before} → {after} vectors",
+    reindexNothing: "There is nothing to rebuild.",
+    reindexStartFailed: "Failed to start the rebuild",
     hfModelMissing: "HuggingFace model files were incorrect or missing, please",
     hfModelDownloadLink: "click here to download model files from Huggingface.co",
     hfModelManual: ", or you can download manually and put them in {path}",
