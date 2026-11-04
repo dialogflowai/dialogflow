@@ -124,8 +124,8 @@ curl -N -H 'Content-Type: application/json' \
 | SQLite | 不支持 | 正在适配 | 支持 |
 | PostgreSQL | 不支持 | 支持 | 支持 |
 | MySQL | 不支持 | 正在适配 | 支持 |
-| 审计/Audit | 不支持 | 不支持 | 支持 |
+| 审计/Audit | 不支持 | 支持 | 支持 |
 | 信创/国产化生态 | 不支持 | 不支持 | 支持 |
 | 许可证 | Apache license 2.0 | Apache license 2.0 | Apache license 2.0 |
 | 技术支持 | Github issues | Email | Email |
-| 项目链接 | https://github.com/dialogflowai/dialogflow | https://github.com/Braidwork/Kiko | 开发中 |
+| 项目链接 | https://github.com/dialogflowai/dialogflow | https://github.com/Braidwork/Kiko | 邮箱：dialogflow@yeah.net |

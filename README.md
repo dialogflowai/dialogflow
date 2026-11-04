@@ -123,8 +123,8 @@ Using the different nodes above, to arrange and combine, you can get a conversat
 | SQLite | Not supported | WIP | Supported |
 | PostgreSQL | Not supported | Supported | Supported |
 | MySQL | Not supported | WIP | Supported |
-| Audit | Not supported | Not supported | Supported |
+| Audit | Not supported | Supported | Supported |
 | Xinchuang / localized ecosystem | Not supported | Not supported | Supported |
 | License | Apache License 2.0 | Apache License 2.0 | Apache License 2.0 |
 | Technical support | GitHub issues | Email | Email |
-| Project link | https://github.com/dialogflowai/dialogflow | https://github.com/Braidwork/Kiko | Under development |
+| Project link | https://github.com/dialogflowai/dialogflow | https://github.com/Braidwork/Kiko | Email: dialogflow@yeah.net |
